@@ -4,7 +4,8 @@ from __future__ import annotations
 
 import json
 import os
-from typing import Callable, Iterator, Optional, TypeVar, Awaitable
+from pathlib import Path
+from typing import Awaitable, Callable, Iterator, Optional, TypeVar
 
 from redis.asyncio import Redis
 from sqlmodel import Session, SQLModel, create_engine
@@ -15,7 +16,8 @@ except ImportError:  # pragma: no cover - fallback if fakeredis missing
     FakeRedis = None  # type: ignore
 
 
-_DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./backend/data.db")
+_DEFAULT_SQLITE_PATH = Path(__file__).resolve().parent.parent / "data.db"
+_DATABASE_URL = os.getenv("DATABASE_URL", f"sqlite:///{_DEFAULT_SQLITE_PATH}")
 _CONNECT_ARGS = {"check_same_thread": False} if _DATABASE_URL.startswith("sqlite") else {}
 
 engine = create_engine(_DATABASE_URL, connect_args=_CONNECT_ARGS, echo=False)
