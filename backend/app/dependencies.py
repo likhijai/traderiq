@@ -16,8 +16,20 @@ except ImportError:  # pragma: no cover - fallback if fakeredis missing
     FakeRedis = None  # type: ignore
 
 
-_DEFAULT_SQLITE_PATH = Path(__file__).resolve().parent.parent / "data.db"
-_DATABASE_URL = os.getenv("DATABASE_URL", f"sqlite:///{_DEFAULT_SQLITE_PATH}")
+def _default_sqlite_url() -> str:
+    """Return a SQLite URL that works regardless of the current directory."""
+
+    module_root = Path(__file__).resolve().parent.parent
+    db_path = module_root / "data.db"
+    db_path.parent.mkdir(parents=True, exist_ok=True)
+    try:
+        path_for_url = db_path.relative_to(Path.cwd())
+    except ValueError:
+        path_for_url = db_path
+    return f"sqlite:///{path_for_url.as_posix()}"
+
+
+_DATABASE_URL = os.getenv("DATABASE_URL", _default_sqlite_url())
 _CONNECT_ARGS = {"check_same_thread": False} if _DATABASE_URL.startswith("sqlite") else {}
 
 engine = create_engine(_DATABASE_URL, connect_args=_CONNECT_ARGS, echo=False)
